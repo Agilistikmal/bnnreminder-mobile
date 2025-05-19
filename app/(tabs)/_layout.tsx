@@ -1,45 +1,57 @@
+import { MaterialIcons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
-import React from 'react';
 import { Platform } from 'react-native';
-
-import { HapticTab } from '@/components/HapticTab';
-import { IconSymbol } from '@/components/ui/IconSymbol';
-import TabBarBackground from '@/components/ui/TabBarBackground';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const insets = useSafeAreaInsets();
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
-        tabBarButton: HapticTab,
-        tabBarBackground: TabBarBackground,
-        tabBarStyle: Platform.select({
-          ios: {
-            // Use a transparent background on iOS to show the blur effect
-            position: 'absolute',
-          },
-          default: {},
-        }),
-      }}>
+        tabBarActiveTintColor: '#2196F3',
+        tabBarInactiveTintColor: '#666',
+        headerShown: true,
+        headerStyle: {
+          backgroundColor: '#fff',
+        },
+        headerTitleStyle: {
+          fontSize: 18,
+          fontWeight: '600',
+        },
+        headerShadowVisible: false,
+        tabBarStyle: {
+          backgroundColor: '#fff',
+          height: Platform.OS === 'ios' ? 84 : 64,
+          paddingTop: 8,
+          paddingBottom: Platform.OS === 'ios' ? 24 + insets.bottom : 8,
+        },
+        tabBarLabelStyle: {
+          marginTop: -4,
+          marginBottom: Platform.OS === 'ios' ? 24 : 8,
+        },
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          title: 'Daftar KGB',
+          headerTitle: 'Daftar KGB',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialIcons name="list-alt" size={size} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="profile"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: 'Profil',
+          headerTitle: 'Profil',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialIcons name="person" size={size} color={color} />
+          ),
         }}
       />
     </Tabs>
   );
-}
+} 

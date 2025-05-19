@@ -1,29 +1,37 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
+import { setupNotifications } from '@/services/NotificationService';
 import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
-
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { useEffect } from 'react';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
-
-  if (!loaded) {
-    // Async font loading only occurs in development.
-    return null;
-  }
+  useEffect(() => {
+    setupNotifications();
+  }, []);
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+    <SafeAreaProvider>
       <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
+        <Stack.Screen 
+          name="(tabs)" 
+          options={{ headerShown: false }} 
+        />
+        <Stack.Screen
+          name="detail/[id]"
+          options={{
+            title: 'Detail KGB',
+            headerTintColor: '#2196F3',
+            headerStyle: {
+              backgroundColor: '#fff',
+            },
+            headerTitleStyle: {
+              fontSize: 18,
+              fontWeight: '600',
+            },
+            headerShadowVisible: false,
+            headerBackTitle: 'Kembali',
+          }}
+        />
       </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    </SafeAreaProvider>
   );
 }
