@@ -1,5 +1,4 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { createCanvas } from 'canvas';
 import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
 import { router } from 'expo-router';
@@ -143,48 +142,6 @@ async function checkForNewReminders() {
     }
 }
 
-// Fungsi untuk membuat gambar notifikasi
-async function createNotificationImage(data: any) {
-    const width = 800;
-    const height = 400;
-    const canvas = createCanvas(width, height);
-    const ctx = canvas.getContext('2d');
-
-    // Background
-    ctx.fillStyle = '#2196F3';
-    ctx.fillRect(0, 0, width, height);
-
-    // Header
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = 'bold 36px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText('Pengingat KGB', width / 2, 60);
-
-    // Content
-    ctx.font = '24px Arial';
-    if (data.length === 1) {
-        const employee = data[0];
-        ctx.fillText(`${employee.nama}`, width / 2, 150);
-        ctx.fillText(`NIP: ${employee.nip}`, width / 2, 190);
-        ctx.fillText(`KGB Berikutnya: ${employee.kgbBerikutnya}`, width / 2, 230);
-    } else {
-        ctx.fillText(`Ada ${data.length} pegawai yang waktunya KGB`, width / 2, 150);
-        ctx.font = '20px Arial';
-        data.slice(0, 3).forEach((employee: any, index: number) => {
-            ctx.fillText(`${employee.nama} - ${employee.nip}`, width / 2, 200 + (index * 40));
-        });
-        if (data.length > 3) {
-            ctx.fillText(`...dan ${data.length - 3} pegawai lainnya`, width / 2, 320);
-        }
-    }
-
-    // Footer
-    ctx.font = '16px Arial';
-    ctx.fillText('BNN Reminder', width / 2, height - 30);
-
-    return canvas.toBuffer('image/png');
-}
-
 async function sendNotification() {
     if (isExpoGo) {
         console.warn('Pengiriman notifikasi tidak tersedia di Expo Go');
@@ -208,30 +165,56 @@ async function sendNotification() {
             ? { employeeId: waktunyaKGB[0].no }
             : { screen: 'home' };
 
-        // Buat gambar notifikasi
-        const imageBuffer = await createNotificationImage(waktunyaKGB);
-        const imageBase64 = imageBuffer.toString('base64');
-
         await Notifications.scheduleNotificationAsync({
             content: {
                 title,
                 body,
                 data,
-                attachments: [{
-                    url: `data:image/png;base64,${imageBase64}`,
-                    thumbnailClipArea: { x: 0, y: 0, width: 1, height: 1 },
-                    identifier: 'kgb-reminder',
-                    type: 'image/png'
-                }]
             },
             trigger: {
-                seconds: 60 * 15, // 15 menit
+                seconds: 60 * 60 * 6, // 6 jam
                 repeats: true,
                 channelId: 'default'
             },
         });
     } catch (error) {
         console.error('Error sending notification:', error);
+    }
+}
+
+// Fungsi untuk mengirim notifikasi test
+export async function sendTestNotification() {
+    if (isExpoGo) {
+        console.warn('Pengiriman notifikasi tidak tersedia di Expo Go');
+        return;
+    }
+
+    try {
+        // Buat data test
+        const testData = {
+            nama: "Test User",
+            nip: "198501012010011001",
+            kgbBerikutnya: "2024-04-01",
+            no: "1"
+        };
+
+        // Kirim notifikasi test
+        await Notifications.scheduleNotificationAsync({
+            content: {
+                title: "Test Notifikasi KGB",
+                body: `${testData.nama} (${testData.nip}) waktunya KGB pada ${testData.kgbBerikutnya}`,
+                data: { employeeId: testData.no }
+            },
+            trigger: {
+                seconds: 5, // Notifikasi akan muncul dalam 5 detik
+                repeats: false,
+                channelId: 'default'
+            },
+        });
+
+        console.log('Notifikasi test berhasil dikirim');
+    } catch (error) {
+        console.error('Error sending test notification:', error);
     }
 }
 

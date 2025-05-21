@@ -1,3 +1,4 @@
+import { sendTestNotification } from '@/services/NotificationService';
 import Constants from 'expo-constants';
 import { Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -6,44 +7,60 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView>
-      <View style={styles.header}>
-        <Text style={styles.title}>BNN Reminder</Text>
-        <Text style={styles.version}>Versi {Constants.expoConfig?.version || '1.0.0'}</Text>
-      </View>
+        <View style={styles.header}>
+          <Text style={styles.title}>BNN Reminder</Text>
+          <Text style={styles.version}>Versi {Constants.expoConfig?.version || '1.0.0'}</Text>
+        </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Tentang Aplikasi</Text>
-        <Text style={styles.description}>
-          Aplikasi pengingat KGB (Kenaikan Gaji Berkala) untuk pegawai BNN Provinsi D.I. Yogyakarta. Aplikasi ini membantu memantau jadwal KGB pegawai dan memberikan notifikasi ketika waktunya KGB.
-        </Text>
-      </View>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Tentang Aplikasi</Text>
+          <Text style={styles.description}>
+            Aplikasi pengingat KGB (Kenaikan Gaji Berkala) untuk pegawai BNN Provinsi D.I. Yogyakarta. Aplikasi ini membantu memantau jadwal KGB pegawai dan memberikan notifikasi ketika waktunya KGB.
+          </Text>
+        </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Fitur</Text>
-        <View style={styles.featureItem}>
-          <Text style={styles.featureText}>• Monitoring jadwal KGB pegawai</Text>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Fitur</Text>
+          <View style={styles.featureItem}>
+            <Text style={styles.featureText}>• Monitoring jadwal KGB pegawai</Text>
+          </View>
+          <View style={styles.featureItem}>
+            <Text style={styles.featureText}>• Notifikasi otomatis setiap 6 jam</Text>
+          </View>
+          <View style={styles.featureItem}>
+            <Text style={styles.featureText}>• Detail informasi KGB</Text>
+          </View>
+          <View style={styles.featureItem}>
+            <Text style={styles.featureText}>• Pencarian pegawai</Text>
+          </View>
         </View>
-        <View style={styles.featureItem}>
-          <Text style={styles.featureText}>• Notifikasi otomatis</Text>
-        </View>
-        <View style={styles.featureItem}>
-          <Text style={styles.featureText}>• Detail informasi KGB</Text>
-        </View>
-        <View style={styles.featureItem}>
-          <Text style={styles.featureText}>• Pencarian pegawai</Text>
-        </View>
-      </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Pengembang</Text>
-        <Text style={styles.developer}>Agil Ghani Istikmal</Text>
-        <Text style={{color: '#666', fontSize: 12}}>Program KDK Magang Informatika</Text>
-        <Text style={{color: '#666', fontSize: 12}}>Universitas Teknologi Yogyakarta</Text>
-        <Text style={{color: '#666', fontSize: 12}}>Email: hubungi@agil.zip</Text>
-        <TouchableOpacity onPress={() => Linking.openURL('https://agil.zip')}>
-          <Text style={{color: '#2196F3', textDecorationLine: 'underline'}}>https://agil.zip</Text>
-        </TouchableOpacity>
-      </View>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Test Notifikasi</Text>
+          <TouchableOpacity 
+            style={styles.testButton}
+            onPress={sendTestNotification}
+          >
+            <Text style={styles.testButtonText}>Kirim Notifikasi Test</Text>
+          </TouchableOpacity>
+          <Text style={styles.testDescription}>
+            Notifikasi test akan muncul dalam 5 detik setelah tombol ditekan
+          </Text>
+          <Text style={styles.notificationInfo}>
+            Notifikasi KGB akan dicek dan dikirim setiap 6 jam (4 kali sehari) untuk menghemat baterai dan mengikuti kebijakan Android
+          </Text>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Pengembang</Text>
+          <Text style={styles.developer}>Agil Ghani Istikmal</Text>
+          <Text style={{color: '#666', fontSize: 12}}>Program KDK Magang Informatika</Text>
+          <Text style={{color: '#666', fontSize: 12}}>Universitas Teknologi Yogyakarta</Text>
+          <Text style={{color: '#666', fontSize: 12}}>Email: hubungi@agil.zip</Text>
+          <TouchableOpacity onPress={() => Linking.openURL('https://agil.zip')}>
+            <Text style={{color: '#2196F3', textDecorationLine: 'underline'}}>https://agil.zip</Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -109,5 +126,29 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     marginBottom: 4,
+  },
+  testButton: {
+    backgroundColor: '#2196F3',
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  testButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  testDescription: {
+    fontSize: 12,
+    color: '#666',
+    textAlign: 'center',
+  },
+  notificationInfo: {
+    fontSize: 12,
+    color: '#666',
+    textAlign: 'center',
+    marginTop: 8,
+    fontStyle: 'italic',
   },
 }); 
