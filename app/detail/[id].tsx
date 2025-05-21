@@ -1,7 +1,8 @@
 import { KGBData, calculateKGBStatus, fetchKGBData, formatCurrency, formatDate } from '@/services/SpreadsheetService';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function DetailScreen() {
@@ -23,6 +24,13 @@ export default function DetailScreen() {
     }
     loadData();
   }, [id]);
+
+  const openSpreadsheet = () => {
+    const SHEET_ID = '1aUaVK6m6NMsw0hliH-wwlqb2ayLd6CHuT8F0rIUNvyM';
+    const rowNumber = parseInt(id) + 1;
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit#gid=0&range=A${rowNumber}`;
+    Linking.openURL(url);
+  };
 
   if (loading) {
     return (
@@ -97,6 +105,11 @@ export default function DetailScreen() {
           <InfoItem label="Satuan Kerja" value={data.satker} />
         </View>
       </ScrollView>
+
+      <TouchableOpacity style={styles.fab} onPress={openSpreadsheet}>
+        <MaterialIcons name="edit" size={24} color="#fff" />
+        <Text style={styles.fabText}>Perbarui di Spreadsheet</Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }
@@ -143,6 +156,7 @@ const styles = StyleSheet.create({
   },
   lastSection: {
     borderBottomWidth: 0,
+    marginBottom: 80, // Tambahkan margin untuk FAB
   },
   sectionTitle: {
     fontSize: 16,
@@ -161,5 +175,29 @@ const styles = StyleSheet.create({
   value: {
     fontSize: 16,
     fontWeight: '500',
+  },
+  fab: {
+    position: 'absolute',
+    left: 16,
+    right: 16,
+    bottom: 16,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#2196F3',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    paddingHorizontal: 24,
+  },
+  fabText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
   },
 }); 

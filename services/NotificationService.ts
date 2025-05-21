@@ -1,12 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as BackgroundFetch from 'expo-background-fetch';
+import { createCanvas } from 'canvas';
 import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
+import { router } from 'expo-router';
 import * as TaskManager from 'expo-task-manager';
 import { Platform } from 'react-native';
 import { calculateKGBStatus, fetchKGBData } from './SpreadsheetService';
 
-const BACKGROUND_FETCH_TASK = 'BACKGROUND_FETCH_TASK';
+const BACKGROUND_TASK = 'BACKGROUND_TASK';
 
 // Cek apakah menggunakan Expo Go
 const isExpoGo = Constants.executionEnvironment === 'storeClient';
@@ -22,8 +23,16 @@ Notifications.setNotificationHandler({
     }),
 });
 
-// Konfigurasi background fetch task
-TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
+// Handler untuk klik notifikasi
+Notifications.addNotificationResponseReceivedListener((response) => {
+    const data = response.notification.request.content.data;
+    if (data?.employeeId) {
+        router.push(`/detail/${data.employeeId}`);
+    }
+});
+
+// Konfigurasi background task
+TaskManager.defineTask(BACKGROUND_TASK, async () => {
     try {
         const hasNewReminders = await checkForNewReminders();
 
@@ -31,24 +40,41 @@ TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
             await sendNotification();
         }
 
-        return hasNewReminders ? BackgroundFetch.BackgroundFetchResult.NewData : BackgroundFetch.BackgroundFetchResult.NoData;
+        return true;
     } catch (error) {
-        return BackgroundFetch.BackgroundFetchResult.Failed;
+        return false;
     }
 });
 
-export async function registerBackgroundFetch() {
+export async function registerBackgroundTask() {
     if (isExpoGo) {
-        console.warn('Background fetch tidak tersedia di Expo Go');
+        console.warn('Background task tidak tersedia di Expo Go');
         return;
     }
 
     try {
-        await BackgroundFetch.registerTaskAsync(BACKGROUND_FETCH_TASK, {
-            minimumInterval: 60 * 60, // 1 jam
-            stopOnTerminate: false,
-            startOnBoot: true,
+        const isRegistered = await TaskManager.isTaskRegisteredAsync(BACKGROUND_TASK);
+
+        // Hanya unregister jika task sudah terdaftar
+        if (isRegistered) {
+            await TaskManager.unregisterTaskAsync(BACKGROUND_TASK);
+        }
+
+        // Daftarkan task baru
+        await TaskManager.defineTask(BACKGROUND_TASK, async () => {
+            try {
+                const hasNewReminders = await checkForNewReminders();
+                if (hasNewReminders) {
+                    await sendNotification();
+                }
+                return true;
+            } catch (error) {
+                console.error('Error in background task:', error);
+                return false;
+            }
         });
+
+        console.log('Background task berhasil didaftarkan');
     } catch (err) {
         console.error("Gagal mendaftarkan task:", err);
     }
@@ -101,7 +127,8 @@ async function checkForNewReminders() {
             const notificationData = waktunyaKGB.map(item => ({
                 nama: item.nama,
                 nip: item.nip,
-                kgbBerikutnya: item.kgbBerikutnya
+                kgbBerikutnya: item.kgbBerikutnya,
+                no: item.no // Tambahkan nomor pegawai
             }));
 
             // Simpan ke AsyncStorage untuk digunakan di notifikasi
@@ -114,6 +141,48 @@ async function checkForNewReminders() {
         console.error('Error checking for reminders:', error);
         return false;
     }
+}
+
+// Fungsi untuk membuat gambar notifikasi
+async function createNotificationImage(data: any) {
+    const width = 800;
+    const height = 400;
+    const canvas = createCanvas(width, height);
+    const ctx = canvas.getContext('2d');
+
+    // Background
+    ctx.fillStyle = '#2196F3';
+    ctx.fillRect(0, 0, width, height);
+
+    // Header
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 36px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('Pengingat KGB', width / 2, 60);
+
+    // Content
+    ctx.font = '24px Arial';
+    if (data.length === 1) {
+        const employee = data[0];
+        ctx.fillText(`${employee.nama}`, width / 2, 150);
+        ctx.fillText(`NIP: ${employee.nip}`, width / 2, 190);
+        ctx.fillText(`KGB Berikutnya: ${employee.kgbBerikutnya}`, width / 2, 230);
+    } else {
+        ctx.fillText(`Ada ${data.length} pegawai yang waktunya KGB`, width / 2, 150);
+        ctx.font = '20px Arial';
+        data.slice(0, 3).forEach((employee: any, index: number) => {
+            ctx.fillText(`${employee.nama} - ${employee.nip}`, width / 2, 200 + (index * 40));
+        });
+        if (data.length > 3) {
+            ctx.fillText(`...dan ${data.length - 3} pegawai lainnya`, width / 2, 320);
+        }
+    }
+
+    // Footer
+    ctx.font = '16px Arial';
+    ctx.fillText('BNN Reminder', width / 2, height - 30);
+
+    return canvas.toBuffer('image/png');
 }
 
 async function sendNotification() {
@@ -134,13 +203,32 @@ async function sendNotification() {
             ? `${waktunyaKGB[0].nama} (${waktunyaKGB[0].nip}) waktunya KGB`
             : `Ada ${count} pegawai yang waktunya KGB`;
 
+        // Jika hanya ada 1 pegawai, tambahkan ID-nya ke data notifikasi
+        const data = count === 1
+            ? { employeeId: waktunyaKGB[0].no }
+            : { screen: 'home' };
+
+        // Buat gambar notifikasi
+        const imageBuffer = await createNotificationImage(waktunyaKGB);
+        const imageBase64 = imageBuffer.toString('base64');
+
         await Notifications.scheduleNotificationAsync({
             content: {
                 title,
                 body,
-                data: { screen: 'home' },
+                data,
+                attachments: [{
+                    url: `data:image/png;base64,${imageBase64}`,
+                    thumbnailClipArea: { x: 0, y: 0, width: 1, height: 1 },
+                    identifier: 'kgb-reminder',
+                    type: 'image/png'
+                }]
             },
-            trigger: null,
+            trigger: {
+                seconds: 60 * 15, // 15 menit
+                repeats: true,
+                channelId: 'default'
+            },
         });
     } catch (error) {
         console.error('Error sending notification:', error);
@@ -155,7 +243,7 @@ export async function setupNotifications() {
         }
 
         await requestNotificationPermissions();
-        await registerBackgroundFetch();
+        await registerBackgroundTask();
         return true;
     } catch (error) {
         console.error("Gagal menyiapkan notifikasi:", error);
@@ -163,24 +251,20 @@ export async function setupNotifications() {
     }
 }
 
-// Fungsi untuk memulai background fetch
-export async function startBackgroundFetch() {
+// Fungsi untuk memulai background task
+export async function startBackgroundTask() {
     try {
-        await BackgroundFetch.registerTaskAsync(BACKGROUND_FETCH_TASK, {
-            minimumInterval: 60 * 15, // 15 menit
-            stopOnTerminate: false,
-            startOnBoot: true,
-        });
+        await registerBackgroundTask();
     } catch (error) {
-        console.error('Error starting background fetch:', error);
+        console.error('Error starting background task:', error);
     }
 }
 
-// Fungsi untuk menghentikan background fetch
-export async function stopBackgroundFetch() {
+// Fungsi untuk menghentikan background task
+export async function stopBackgroundTask() {
     try {
-        await BackgroundFetch.unregisterTaskAsync(BACKGROUND_FETCH_TASK);
+        await TaskManager.unregisterTaskAsync(BACKGROUND_TASK);
     } catch (error) {
-        console.error('Error stopping background fetch:', error);
+        console.error('Error stopping background task:', error);
     }
 } 
