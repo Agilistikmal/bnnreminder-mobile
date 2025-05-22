@@ -36,7 +36,8 @@
     },
     "plugins": [
       "expo-notifications",
-      "expo-background-fetch"
+      "expo-background-fetch",
+      "expo-background-task"
     ],
     "extra": {
       "eas": {

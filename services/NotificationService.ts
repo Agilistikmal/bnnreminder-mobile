@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as BackgroundFetch from 'expo-background-fetch';
+import * as BackgroundTask from 'expo-background-task';
 import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
 import { router } from 'expo-router';
@@ -40,10 +40,10 @@ TaskManager.defineTask(BACKGROUND_TASK, async () => {
             await sendNotification();
         }
 
-        return BackgroundFetch.BackgroundFetchResult.NewData;
+        return BackgroundTask.BackgroundTaskResult.Success;
     } catch (error) {
         console.error('Error in background task:', error);
-        return BackgroundFetch.BackgroundFetchResult.Failed;
+        return BackgroundTask.BackgroundTaskResult.Failed;
     }
 });
 
@@ -67,18 +67,16 @@ export async function registerBackgroundTask() {
                 if (hasNewReminders) {
                     await sendNotification();
                 }
-                return BackgroundFetch.BackgroundFetchResult.NewData;
+                return BackgroundTask.BackgroundTaskResult.Success;
             } catch (error) {
                 console.error('Error in background task:', error);
-                return BackgroundFetch.BackgroundFetchResult.Failed;
+                return BackgroundTask.BackgroundTaskResult.Failed;
             }
         });
 
-        // Daftarkan background fetch
-        await BackgroundFetch.registerTaskAsync(BACKGROUND_TASK, {
-            minimumInterval: 60 * 5, // 5 menit
-            stopOnTerminate: false,
-            startOnBoot: true,
+        // Daftarkan background task
+        await BackgroundTask.registerTaskAsync(BACKGROUND_TASK, {
+            minimumInterval: 60 * 60 * 6, // 6 jam
         });
 
         console.log('Background task berhasil didaftarkan');
@@ -130,12 +128,22 @@ async function checkForNewReminders() {
         const waktunyaKGB = kgbData.filter(item => calculateKGBStatus(item) === 'waktunya');
 
         if (waktunyaKGB.length > 0) {
+            // Get current date and last notification date
+            const currentDate = new Date().toDateString();
+            const lastNotificationDate = await AsyncStorage.getItem('lastNotificationDate');
+
+            // If it's a new day, reset the notification data
+            if (lastNotificationDate !== currentDate) {
+                await AsyncStorage.setItem('lastNotificationDate', currentDate);
+                await AsyncStorage.removeItem('waktunyaKGB');
+            }
+
             // Simpan data untuk notifikasi
             const notificationData = waktunyaKGB.map(item => ({
                 nama: item.nama,
                 nip: item.nip,
                 kgbBerikutnya: item.kgbBerikutnya,
-                no: item.no // Tambahkan nomor pegawai
+                no: item.no
             }));
 
             // Simpan ke AsyncStorage untuk digunakan di notifikasi
@@ -236,9 +244,6 @@ export async function setupNotifications() {
         await requestNotificationPermissions();
         await registerBackgroundTask();
 
-        // Mulai background fetch
-        await BackgroundFetch.setMinimumIntervalAsync(60 * 5); // 5 menit
-
         return true;
     } catch (error) {
         console.error("Gagal menyiapkan notifikasi:", error);
@@ -261,5 +266,25 @@ export async function stopBackgroundTask() {
         await TaskManager.unregisterTaskAsync(BACKGROUND_TASK);
     } catch (error) {
         console.error('Error stopping background task:', error);
+    }
+}
+
+// Fungsi untuk mengecek dan mengirim notifikasi saat aplikasi dibuka
+export async function checkAndSendNotificationOnAppOpen() {
+    try {
+        const currentDate = new Date().toDateString();
+        const lastCheckDate = await AsyncStorage.getItem('lastCheckDate');
+
+        // Jika ini adalah pembukaan pertama di hari ini
+        if (lastCheckDate !== currentDate) {
+            await AsyncStorage.setItem('lastCheckDate', currentDate);
+            const hasNewReminders = await checkForNewReminders();
+
+            if (hasNewReminders) {
+                await sendNotification();
+            }
+        }
+    } catch (error) {
+        console.error('Error checking notifications on app open:', error);
     }
 } 
