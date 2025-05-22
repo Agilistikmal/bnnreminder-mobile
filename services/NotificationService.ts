@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as BackgroundFetch from 'expo-background-fetch';
 import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
 import { router } from 'expo-router';
@@ -39,9 +40,10 @@ TaskManager.defineTask(BACKGROUND_TASK, async () => {
             await sendNotification();
         }
 
-        return true;
+        return BackgroundFetch.BackgroundFetchResult.NewData;
     } catch (error) {
-        return false;
+        console.error('Error in background task:', error);
+        return BackgroundFetch.BackgroundFetchResult.Failed;
     }
 });
 
@@ -52,9 +54,8 @@ export async function registerBackgroundTask() {
     }
 
     try {
+        // Unregister task yang ada
         const isRegistered = await TaskManager.isTaskRegisteredAsync(BACKGROUND_TASK);
-
-        // Hanya unregister jika task sudah terdaftar
         if (isRegistered) {
             await TaskManager.unregisterTaskAsync(BACKGROUND_TASK);
         }
@@ -66,11 +67,18 @@ export async function registerBackgroundTask() {
                 if (hasNewReminders) {
                     await sendNotification();
                 }
-                return true;
+                return BackgroundFetch.BackgroundFetchResult.NewData;
             } catch (error) {
                 console.error('Error in background task:', error);
-                return false;
+                return BackgroundFetch.BackgroundFetchResult.Failed;
             }
+        });
+
+        // Daftarkan background fetch
+        await BackgroundFetch.registerTaskAsync(BACKGROUND_TASK, {
+            minimumInterval: 60 * 5, // 5 menit
+            stopOnTerminate: false,
+            startOnBoot: true,
         });
 
         console.log('Background task berhasil didaftarkan');
@@ -227,6 +235,10 @@ export async function setupNotifications() {
 
         await requestNotificationPermissions();
         await registerBackgroundTask();
+
+        // Mulai background fetch
+        await BackgroundFetch.setMinimumIntervalAsync(60 * 5); // 5 menit
+
         return true;
     } catch (error) {
         console.error("Gagal menyiapkan notifikasi:", error);
