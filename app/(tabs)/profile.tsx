@@ -47,7 +47,7 @@ export default function ProfileScreen() {
             Notifikasi test akan muncul dalam 5 detik setelah tombol ditekan
           </Text>
           <Text style={styles.notificationInfo}>
-            Notifikasi KGB akan dicek dan dikirim setiap 6 jam (4 kali sehari) untuk menghemat baterai dan mengikuti kebijakan Android
+            Notifikasi KGB akan dicek dan dikirim setiap 2 jam
           </Text>
         </View>
 
