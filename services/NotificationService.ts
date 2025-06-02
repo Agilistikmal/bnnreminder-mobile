@@ -1,4 +1,3 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as BackgroundTask from 'expo-background-task';
 import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
@@ -63,10 +62,7 @@ export async function registerBackgroundTask() {
         // Daftarkan task baru
         await TaskManager.defineTask(BACKGROUND_TASK, async () => {
             try {
-                const hasNewReminders = await checkForNewReminders();
-                if (hasNewReminders) {
-                    await sendNotification();
-                }
+                await sendNotification();
                 return BackgroundTask.BackgroundTaskResult.Success;
             } catch (error) {
                 console.error('Error in background task:', error);
@@ -76,7 +72,7 @@ export async function registerBackgroundTask() {
 
         // Daftarkan background task
         await BackgroundTask.registerTaskAsync(BACKGROUND_TASK, {
-            minimumInterval: 60 * 60 * 6, // 6 jam
+            minimumInterval: 60 * 60 * 2, // 2 jam
         });
 
         console.log('Background task berhasil didaftarkan');
@@ -128,33 +124,18 @@ async function checkForNewReminders() {
         const waktunyaKGB = kgbData.filter(item => calculateKGBStatus(item) === 'waktunya');
 
         if (waktunyaKGB.length > 0) {
-            // Get current date and last notification date
-            const currentDate = new Date().toDateString();
-            const lastNotificationDate = await AsyncStorage.getItem('lastNotificationDate');
-
-            // If it's a new day, reset the notification data
-            if (lastNotificationDate !== currentDate) {
-                await AsyncStorage.setItem('lastNotificationDate', currentDate);
-                await AsyncStorage.removeItem('waktunyaKGB');
-            }
-
-            // Simpan data untuk notifikasi
-            const notificationData = waktunyaKGB.map(item => ({
+            return waktunyaKGB.map(item => ({
                 nama: item.nama,
                 nip: item.nip,
                 kgbBerikutnya: item.kgbBerikutnya,
                 no: item.no
             }));
-
-            // Simpan ke AsyncStorage untuk digunakan di notifikasi
-            await AsyncStorage.setItem('waktunyaKGB', JSON.stringify(notificationData));
-            return true;
         }
 
-        return false;
+        return null;
     } catch (error) {
         console.error('Error checking for reminders:', error);
-        return false;
+        return null;
     }
 }
 
@@ -165,10 +146,9 @@ async function sendNotification() {
     }
 
     try {
-        const notificationData = await AsyncStorage.getItem('waktunyaKGB');
-        if (!notificationData) return;
+        const waktunyaKGB = await checkForNewReminders();
+        if (!waktunyaKGB) return;
 
-        const waktunyaKGB = JSON.parse(notificationData);
         const count = waktunyaKGB.length;
 
         let title = "Pengingat KGB";
@@ -188,7 +168,7 @@ async function sendNotification() {
                 data,
             },
             trigger: {
-                seconds: 60 * 60 * 6, // 6 jam
+                seconds: 60 * 60 * 2, // 2 jam
                 repeats: true,
                 channelId: 'default'
             },
@@ -272,19 +252,8 @@ export async function stopBackgroundTask() {
 // Fungsi untuk mengecek dan mengirim notifikasi saat aplikasi dibuka
 export async function checkAndSendNotificationOnAppOpen() {
     try {
-        const currentDate = new Date().toDateString();
-        const lastCheckDate = await AsyncStorage.getItem('lastCheckDate');
-
-        // Jika ini adalah pembukaan pertama di hari ini
-        if (lastCheckDate !== currentDate) {
-            await AsyncStorage.setItem('lastCheckDate', currentDate);
-            const hasNewReminders = await checkForNewReminders();
-
-            if (hasNewReminders) {
-                await sendNotification();
-            }
-        }
+        await sendNotification();
     } catch (error) {
         console.error('Error checking notifications on app open:', error);
     }
-} 
+}
