@@ -1,17 +1,34 @@
-import { KGBData, calculateKGBStatus, fetchKGBData, formatDate } from '@/services/SpreadsheetService';
-import { MaterialIcons } from '@expo/vector-icons';
-import { Link } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  KGBData,
+  calculateKGBStatus,
+  fetchKGBData,
+  formatDate,
+} from "@/services/SpreadsheetService";
+import { MaterialIcons } from "@expo/vector-icons";
+import { Link } from "expo-router";
+import React, { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  FlatList,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
   const [data, setData] = useState<KGBData[]>([]);
   const [filteredData, setFilteredData] = useState<KGBData[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedFilter, setSelectedFilter] = useState<'semua' | 'terlambat' | 'waktunya' | 'akan_datang'>('semua');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedFilter, setSelectedFilter] = useState<
+    "semua" | "terlambat" | "waktunya" | "akan_datang"
+  >("semua");
 
   useEffect(() => {
     loadData();
@@ -34,7 +51,7 @@ export default function HomeScreen() {
       setData(sortedData);
       setFilteredData(sortedData);
     } catch (error) {
-      console.error('Error loading data:', error);
+      console.error("Error loading data:", error);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -50,15 +67,17 @@ export default function HomeScreen() {
     let filtered = [...data];
 
     // Apply status filter
-    if (selectedFilter !== 'semua') {
-      filtered = filtered.filter(item => calculateKGBStatus(item) === selectedFilter);
+    if (selectedFilter !== "semua") {
+      filtered = filtered.filter(
+        (item) => calculateKGBStatus(item) === selectedFilter
+      );
     }
 
     // Apply search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
-        item =>
+        (item) =>
           item.nama.toLowerCase().includes(query) ||
           item.nip.toLowerCase().includes(query)
       );
@@ -67,25 +86,35 @@ export default function HomeScreen() {
     setFilteredData(filtered);
   }
 
-  function getStatusColor(status: 'akan_datang' | 'waktunya' | 'terlambat'): string {
+  function getStatusColor(
+    status: "akan_datang" | "waktunya" | "terlambat"
+  ): string {
     const colors = {
-      akan_datang: '#2196F3',
-      waktunya: '#FFC107',
-      terlambat: '#F44336',
+      akan_datang: "#2196F3",
+      waktunya: "#FFC107",
+      terlambat: "#F44336",
     };
     return colors[status];
   }
 
-  function getStatusText(status: 'akan_datang' | 'waktunya' | 'terlambat'): string {
+  function getStatusText(
+    status: "akan_datang" | "waktunya" | "terlambat"
+  ): string {
     const text = {
-      akan_datang: 'Akan Datang',
-      waktunya: 'Waktunya KGB',
-      terlambat: 'Terlambat',
+      akan_datang: "Akan Datang",
+      waktunya: "Waktunya KGB",
+      terlambat: "Terlambat",
     };
     return text[status];
   }
 
-  function FilterButton({ status, label }: { status: typeof selectedFilter, label: string }) {
+  function FilterButton({
+    status,
+    label,
+  }: {
+    status: typeof selectedFilter;
+    label: string;
+  }) {
     return (
       <TouchableOpacity
         style={[
@@ -118,7 +147,9 @@ export default function HomeScreen() {
             </Text>
           </View>
           <Text style={styles.nip}>{item.nip}</Text>
-          <Text style={styles.info}>KGB Berikutnya: {formatDate(item.kgbBerikutnya)}</Text>
+          <Text style={styles.info}>
+            KGB TMT Baru: {formatDate(item.tmtBaru)}
+          </Text>
         </TouchableOpacity>
       </Link>
     );
@@ -138,7 +169,12 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.searchContainer}>
         <View style={styles.searchInputContainer}>
-          <MaterialIcons name="search" size={24} color="#666" style={styles.searchIcon} />
+          <MaterialIcons
+            name="search"
+            size={24}
+            color="#666"
+            style={styles.searchIcon}
+          />
           <TextInput
             style={styles.searchInput}
             placeholder="Cari nama atau NIP..."
@@ -147,12 +183,16 @@ export default function HomeScreen() {
             placeholderTextColor="#666"
           />
           {searchQuery ? (
-            <TouchableOpacity onPress={() => setSearchQuery('')}>
+            <TouchableOpacity onPress={() => setSearchQuery("")}>
               <MaterialIcons name="close" size={24} color="#666" />
             </TouchableOpacity>
           ) : null}
         </View>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterContainer}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.filterContainer}
+        >
           <FilterButton status="semua" label="Semua" />
           <FilterButton status="terlambat" label="Terlambat" />
           <FilterButton status="waktunya" label="Waktunya" />
@@ -162,7 +202,7 @@ export default function HomeScreen() {
       <FlatList
         data={filteredData}
         renderItem={renderItem}
-        keyExtractor={item => item.no}
+        keyExtractor={(item) => item.no}
         contentContainerStyle={styles.list}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
@@ -173,7 +213,7 @@ export default function HomeScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={['#2196F3']}
+            colors={["#2196F3"]}
             tintColor="#2196F3"
           />
         }
@@ -185,23 +225,23 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   loading: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   searchContainer: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: "#eee",
     gap: 12,
   },
   searchInputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f5f5f5",
     borderRadius: 8,
     paddingHorizontal: 12,
   },
@@ -212,71 +252,71 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 44,
     fontSize: 16,
-    color: '#000',
+    color: "#000",
   },
   filterContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 8,
   },
   filterButton: {
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: "#f5f5f5",
   },
   filterButtonActive: {
-    backgroundColor: '#2196F3',
+    backgroundColor: "#2196F3",
   },
   filterButtonText: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
   },
   filterButtonTextActive: {
-    color: '#fff',
-    fontWeight: '600',
+    color: "#fff",
+    fontWeight: "600",
   },
   list: {
     padding: 16,
   },
   emptyContainer: {
     padding: 16,
-    alignItems: 'center',
+    alignItems: "center",
   },
   emptyText: {
     fontSize: 16,
-    color: '#666',
+    color: "#666",
   },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 8,
     padding: 16,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#eee',
+    borderColor: "#eee",
   },
   cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 8,
   },
   name: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     flex: 1,
     marginRight: 8,
   },
   status: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   nip: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
     marginBottom: 4,
   },
   info: {
     fontSize: 14,
-    color: '#2196F3',
+    color: "#2196F3",
   },
-}); 
+});

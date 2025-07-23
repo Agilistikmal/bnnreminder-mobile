@@ -1,23 +1,28 @@
-import { formatCurrency, formatDate, KGBData } from '@/services/SpreadsheetService';
-import { Link } from 'expo-router';
-import { StyleSheet, Text, View } from 'react-native';
+import {
+  formatCurrency,
+  formatDate,
+  KGBData,
+} from "@/services/SpreadsheetService";
+import { Link } from "expo-router";
+import React from "react";
+import { StyleSheet, Text, View } from "react-native";
 
 interface KGBCardProps {
   data: KGBData;
-  status: 'akan_datang' | 'waktunya' | 'terlambat';
+  status: "akan_datang" | "waktunya" | "terlambat";
 }
 
 export function KGBCard({ data, status }: KGBCardProps) {
   const statusColors = {
-    akan_datang: '#2196F3',
-    waktunya: '#FFC107',
-    terlambat: '#F44336',
+    akan_datang: "#2196F3",
+    waktunya: "#FFC107",
+    terlambat: "#F44336",
   };
 
   const statusText = {
-    akan_datang: 'Akan Datang',
-    waktunya: 'Waktunya KGB',
-    terlambat: 'Terlambat',
+    akan_datang: "Akan Datang",
+    waktunya: "Waktunya KGB",
+    terlambat: "Terlambat",
   };
 
   return (
@@ -29,18 +34,20 @@ export function KGBCard({ data, status }: KGBCardProps) {
             {statusText[status]}
           </Text>
         </View>
-        
+
         <Text style={styles.nip}>{data.nip}</Text>
-        
+
         <View style={styles.infoContainer}>
           <View style={styles.infoItem}>
             <Text style={styles.label}>TMT KGB</Text>
             <Text style={styles.value}>{formatDate(data.tmtBaru)}</Text>
           </View>
-          
+
           <View style={styles.infoItem}>
             <Text style={styles.label}>Gaji Pokok</Text>
-            <Text style={styles.value}>{formatCurrency(data.gajiPokokBaru)}</Text>
+            <Text style={styles.value}>
+              {formatCurrency(data.gajiPokokBaru)}
+            </Text>
           </View>
         </View>
 
@@ -56,40 +63,40 @@ export function KGBCard({ data, status }: KGBCardProps) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 8,
     padding: 16,
     marginBottom: 16,
     borderLeftWidth: 4,
     elevation: 2,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 8,
   },
   name: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     flex: 1,
   },
   status: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   nip: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
     marginBottom: 16,
   },
   infoContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 16,
   },
   infoItem: {
@@ -97,20 +104,20 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 12,
-    color: '#666',
+    color: "#666",
     marginBottom: 4,
   },
   value: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   footer: {
     borderTopWidth: 1,
-    borderTopColor: '#eee',
+    borderTopColor: "#eee",
     paddingTop: 12,
   },
   nextKGB: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
   },
-}); 
+});

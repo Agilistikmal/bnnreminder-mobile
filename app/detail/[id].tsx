@@ -1,9 +1,23 @@
-import { KGBData, calculateKGBStatus, fetchKGBData, formatCurrency, formatDate } from '@/services/SpreadsheetService';
-import { MaterialIcons } from '@expo/vector-icons';
-import { useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { ActivityIndicator, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  KGBData,
+  calculateKGBStatus,
+  fetchKGBData,
+  formatCurrency,
+  formatDate,
+} from "@/services/SpreadsheetService";
+import { MaterialIcons } from "@expo/vector-icons";
+import { useLocalSearchParams } from "expo-router";
+import React, { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Linking,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function DetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -14,10 +28,10 @@ export default function DetailScreen() {
     async function loadData() {
       try {
         const kgbData = await fetchKGBData();
-        const detail = kgbData.find(item => item.no === id);
+        const detail = kgbData.find((item) => item.no === id);
         setData(detail || null);
       } catch (error) {
-        console.error('Error loading KGB detail:', error);
+        console.error("Error loading KGB detail:", error);
       } finally {
         setLoading(false);
       }
@@ -26,7 +40,7 @@ export default function DetailScreen() {
   }, [id]);
 
   const openSpreadsheet = () => {
-    const SHEET_ID = '1aUaVK6m6NMsw0hliH-wwlqb2ayLd6CHuT8F0rIUNvyM';
+    const SHEET_ID = "1aUaVK6m6NMsw0hliH-wwlqb2ayLd6CHuT8F0rIUNvyM";
     const rowNumber = parseInt(id) + 1;
     const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit#gid=0&range=A${rowNumber}`;
     Linking.openURL(url);
@@ -54,15 +68,15 @@ export default function DetailScreen() {
 
   const status = calculateKGBStatus(data);
   const statusColors = {
-    akan_datang: '#2196F3',
-    waktunya: '#FFC107',
-    terlambat: '#F44336',
+    akan_datang: "#2196F3",
+    waktunya: "#FFC107",
+    terlambat: "#F44336",
   };
 
   const statusText = {
-    akan_datang: 'Akan Datang',
-    waktunya: 'Waktunya KGB',
-    terlambat: 'Terlambat',
+    akan_datang: "Akan Datang",
+    waktunya: "Waktunya KGB",
+    terlambat: "Terlambat",
   };
 
   return (
@@ -85,22 +99,34 @@ export default function DetailScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>KGB Lama</Text>
           <InfoItem label="TMT" value={formatDate(data.tmtLama)} />
-          <InfoItem label="Gaji Pokok" value={formatCurrency(data.gajiPokokLama)} />
+          <InfoItem
+            label="Gaji Pokok"
+            value={formatCurrency(data.gajiPokokLama)}
+          />
           <InfoItem label="Masa Kerja" value={data.masaKerjaLama} />
         </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>KGB Baru</Text>
           <InfoItem label="TMT" value={formatDate(data.tmtBaru)} />
-          <InfoItem label="Gaji Pokok" value={formatCurrency(data.gajiPokokBaru)} />
+          <InfoItem
+            label="Gaji Pokok"
+            value={formatCurrency(data.gajiPokokBaru)}
+          />
           <InfoItem label="Masa Kerja" value={data.masaKerjaBaru} />
-          <InfoItem label="KGB Berikutnya" value={formatDate(data.kgbBerikutnya)} />
+          <InfoItem
+            label="KGB Berikutnya"
+            value={formatDate(data.kgbBerikutnya)}
+          />
         </View>
 
         <View style={[styles.section, styles.lastSection]}>
           <Text style={styles.sectionTitle}>Informasi Surat</Text>
           <InfoItem label="Nomor Surat" value={data.nomorSurat} />
-          <InfoItem label="Tanggal Surat" value={formatDate(data.tanggalSurat)} />
+          <InfoItem
+            label="Tanggal Surat"
+            value={formatDate(data.tanggalSurat)}
+          />
           <InfoItem label="Oleh Pejabat" value={data.olehPejabat} />
           <InfoItem label="Satuan Kerja" value={data.satker} />
         </View>
@@ -126,16 +152,16 @@ function InfoItem({ label, value }: { label: string; value: string }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   loading: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   errorText: {
     fontSize: 16,
-    color: '#666',
+    color: "#666",
   },
   scrollView: {
     flex: 1,
@@ -143,16 +169,16 @@ const styles = StyleSheet.create({
   header: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: "#eee",
   },
   status: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   section: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: "#eee",
   },
   lastSection: {
     borderBottomWidth: 0,
@@ -160,44 +186,44 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 16,
-    color: '#2196F3',
+    color: "#2196F3",
   },
   infoItem: {
     marginBottom: 12,
   },
   label: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
     marginBottom: 4,
   },
   value: {
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   fab: {
-    position: 'absolute',
+    position: "absolute",
     left: 16,
     right: 16,
     bottom: 16,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#2196F3',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#2196F3",
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
     elevation: 4,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 4,
     paddingHorizontal: 24,
   },
   fabText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     marginLeft: 8,
   },
-}); 
+});
